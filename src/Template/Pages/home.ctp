@@ -62,6 +62,13 @@ $cakeDescription = 'CakePHP: the rapid development PHP framework';
                <a href="click-form" style="float:left">Click-Form</a>
                </h1>
     <?php  } ?>
+    <?php 
+
+           echo $this->Html->link(
+            'Login with Facebook',
+            ['controller' => 'Users', 'action' => 'login', '?' => ['provider' => 'Facebook']]
+            );
+    ?>
 
                
                

@@ -37,39 +37,95 @@ class AppController extends Controller
      *
      * @return void
      */
-    public function initialize()
+    // public function initialize()
+    // {
+    //     parent::initialize();
+
+    //     $this->loadComponent('RequestHandler', [
+    //         'enableBeforeRedirect' => false,
+    //     ]);
+    //     $this->loadComponent('Flash');
+
+    //     $this->loadComponent('Auth');
+
+    //     $this->loadComponent('Auth', [
+    //         'authenticate' => [
+    //             'Form' => [
+    //                 'fields' => [
+    //                     'username' => 'username',
+    //                     'password' => 'password'
+    //                 ]
+
+
+    //             ]
+
+    //         ],
+  
+    //     ]);
+
+    // }
+
+     public function initialize()
     {
         parent::initialize();
-
-        $this->loadComponent('RequestHandler', [
-            'enableBeforeRedirect' => false,
-        ]);
-        $this->loadComponent('Flash');
-
-        $this->loadComponent('Auth');
-
         $this->loadComponent('Auth', [
             'authenticate' => [
                 'Form' => [
+                    'fields' => ['username' => 'email']
+                ],
+                'ADmad/HybridAuth.HybridAuth' => [
+                    // All keys shown below are defaults
                     'fields' => [
-                        'username' => 'username',
-                        'password' => 'password'
+                        'provider' => 'provider',
+                        'openid_identifier' => 'openid_identifier',
+                        'email' => 'email'
+                    ],
+                    'profileModel' => 'ADmad/HybridAuth.SocialProfiles',
+                    'profileModelFkField' => 'user_id',
+                    'userModel' => 'Users',
+                    'hauth_return_to' => [
+                        'controller' => 'Users',
+                        'action' => 'socail_login',
+                        'prefix' => false,
+                        'plugin' => false
                     ]
-
-
                 ]
-
-            ],
-  
+            ]
         ]);
-
     }
 
-    public function beforeFilter(Event $event)
-    {
+
+    // public function beforeFilter(Event $event)
+    // {
        
-        $this->Auth->allow(['add','home','ddform','formsave','savedforms']);
+    //     $this->Auth->allow(['add','home','ddform','formsave','savedforms']);
         
+    //     $this->set('Auth_username', $this->request->session()->read('Auth.User.username'));
+    // }
+
+
+     public function beforeFilter(Event $event)
+    {
+        $this->Auth->allow(['add','home','ddform','formsave','savedforms']);
         $this->set('Auth_username', $this->request->session()->read('Auth.User.username'));
+        \Cake\Event\EventManager::instance()->on('HybridAuth.newUser', [$this, 'createUser']);
+    }
+ 
+    public function createUser(\Cake\Event\Event $event) {
+        // Entity representing record in social_profiles table
+        $profile = $event->data()['profile'];
+ 
+        $user = $this->newEntity([
+            'email' => $profile->email,
+            'password' => time()
+        ]);
+        $user = $this->save($user);
+ 
+        if (!$user) {
+            throw new \RuntimeException('Unable to save new user');
+        }
+ 
+        return $user;
     }
 }
+
